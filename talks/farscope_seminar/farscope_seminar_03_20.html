@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Learning Probabilistic Transition Dynamics Models</title>
+<meta name="author" content="(Aidan Scannell)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://revealjs.com/css/reveal.css"/>
+
+<link rel="stylesheet" href="https://revealjs.com/css/theme/black.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://revealjs.com/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Learning Probabilistic Transition Dynamics Models</h1><h2 class="author">Aidan Scannell</h2><p class="date">Created: 2020-02-17 Mon 15:04</p>
+</section>
+<section id="table-of-contents"><div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#/slide-org65bf4fd">Gaussian Processes</a>
+<ul>
+<li><a href="#/slide-org0314234">Prior</a></li>
+<li><a href="#/slide-org248e9ca">Add Data</a></li>
+<li><a href="#/slide-org320df3b">Condition GP Prior on Data</a></li>
+<li><a href="#/slide-orgbcdb8ae">GP Posterior</a></li>
+</ul>
+</li>
+<li><a href="#/slide-org3b110fb">Uncertainty in Machine Learning</a>
+<ul>
+<li><a href="#/slide-orgbc02065">Aleatoric Uncertainty</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<section>
+<section id="slide-org65bf4fd">
+<h2 id="org65bf4fd">Gaussian Processes</h2>
+<p>
+<b><b>Definition</b></b>: A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+</p>
+
+<p>
+A Gaussian process is completely specified by its mean function \(m(\mathbf{x})\) and its covariance function \(k(\mathbf{x}, \mathbf{x}')\),
+</p>
+
+<div>
+\begin{align}
+	m(\mathbf{x}) &= \mathbb{E}[f(\mathbf{x})], \\
+	k(\mathbf{x}, \mathbf{x}') &= \mathbb{E}[(f(\mathbf{x}) - m(\mathbf{x}))(f(\mathbf{x}') - m(\mathbf{x}'))].
+\end{align}
+
+</div>
+
+<p>
+and we can write the Gaussian process as,
+</p>
+
+<p>
+\[f(\mathbf{x}) \sim \mathcal{GP}(m(\mathbf{x}), k(\mathbf{x}, \mathbf{x}')).\]
+</p>
+
+</section>
+<section id="slide-org0314234">
+<h3 id="org0314234">Prior</h3>
+
+<div class="figure">
+<p><img src="images/gp_prior.png" alt="gp_prior.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org248e9ca">
+<h3 id="org248e9ca">Add Data</h3>
+
+<div class="figure">
+<p><img src="images/gp_prior_and_data.png" alt="gp_prior_and_data.png" />
+</p>
+</div>
+
+
+</section>
+<section id="slide-org320df3b">
+<h3 id="org320df3b">Condition GP Prior on Data</h3>
+
+<div class="figure">
+<p><img src="images/gp_post_samples.png" alt="gp_post_samples.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgbcdb8ae">
+<h3 id="orgbcdb8ae">GP Posterior</h3>
+
+<div class="figure">
+<p><img src="images/gp_post_mu_var.png" alt="gp_post_mu_var.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org3b110fb">
+<h2 id="org3b110fb">Uncertainty in Machine Learning</h2>
+
+<div class="figure">
+<p><img src="images/gp_prior_100_data_noise.png" alt="gp_prior_100_data_noise.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-orgbc02065">
+<h3 id="orgbc02065">Aleatoric Uncertainty</h3>
+
+<div class="figure">
+<p><img src="images/gp_post_100_data_noise.png" alt="gp_post_100_data_noise.png" />
+</p>
+</div>
+</section>
+</section>
+</div>
+</div>
+<script src="https://revealjs.com/js/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://revealjs.com/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+ { src: 'https://revealjs.com/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://revealjs.com/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://revealjs.com/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://revealjs.com/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+});
+</script>
+</body>
+</html>

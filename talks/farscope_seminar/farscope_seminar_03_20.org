@@ -1,0 +1,156 @@
+#+TITLE: Learning Probabilistic Transition Dynamics Models
+#+AUTHOR: Aidan Scannell
+#+EMAIL: aidan.scannell@bristol.ac.uk
+#+REVEAL_THEME: black
+#+OPTIONS: num:nil toc:t ^:nil
+
+# \institute{University of Bristol | University of the West of England | Bristol Robotics Laboratory}
+# Uncertainty Quantification | Data Efficient | Probabilistic Modelling}
+* Gaussian Processes
+
+	**Definition**: A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+
+	A Gaussian process is completely specified by its mean function $m(\mathbf{x})$ and its covariance function $k(\mathbf{x}, \mathbf{x}')$,
+
+	\begin{align}
+		m(\mathbf{x}) &= \mathbb{E}[f(\mathbf{x})], \\
+		k(\mathbf{x}, \mathbf{x}') &= \mathbb{E}[(f(\mathbf{x}) - m(\mathbf{x}))(f(\mathbf{x}') - m(\mathbf{x}'))].
+	\end{align}
+
+	and we can write the Gaussian process as,
+
+	$$f(\mathbf{x}) \sim \mathcal{GP}(m(\mathbf{x}), k(\mathbf{x}, \mathbf{x}')).$$
+  
+** Prior
+
+#+begin_src python :session gp :exports results :results file link
+  # use gp-pres-env (pyvenv-workon)
+  import numpy as np
+  import matplotlib.pyplot as plt
+  from scipy.spatial.distance import cdist
+  from gp import kernel, sample
+
+  n = 1000  # number of test points
+  x_star = np.linspace(-5, 10, n).reshape(-1,1) # points we're going to make predictions at
+  jitter = 1e-8
+  Kss = kernel(x_star, x_star)  # prior covariance
+  f_prior = sample(0, Kss, num_samples=50, jitter=jitter)  # draw samples from posterior
+  fig = plt.figure(figsize=(12, 6))
+  plt.plot(x_star, f_prior)
+  plt.axis('off')
+  plt.savefig('images/gp_prior.png', transparent=True)
+  'images/gp_prior.png' # return this to org-mode
+
+#+end_src
+
+#+RESULTS:
+[[file:images/gp_prior.png]]
+
+** Add Data
+
+#+begin_src python :session gp :exports results :results file link
+    x_train = np.array([-4.4, -0.1, 3.6]).reshape(-1, 1)
+    y_train = np.array([-1.9, 1.2, -0.3]).reshape(-1, 1)
+    #x_train = np.random.rand(20) * 5 - 4
+    #y_train = np.sin(x_train)
+
+    fig = plt.figure(figsize=(12, 6))
+    plt.axis('off')
+    plt.plot(x_star, f_prior)
+    plt.plot(x_train, y_train, 'ko', ms=15)
+
+    plt.savefig('images/gp_prior_and_data.png', transparent=True)
+    'images/gp_prior_and_data.png' # return this to org-mode
+
+#+end_src
+
+
+** Condition GP Prior on Data
+
+#+begin_src python :session gp :exports results :results file link
+  from gp import gp_regression
+  mu, var = gp_regression(x_train, y_train, kernel, x_star)
+  f_post = sample(mu, var, num_samples=50, jitter=jitter)  # draw samples from posterior
+
+  fig = plt.figure(figsize=(12, 6))
+  plt.plot(x_star, f_post)  # plot samples from posterior
+  plt.plot(x_train, y_train, 'ko', ms=15)
+  plt.axis('off')
+  plt.savefig('images/gp_post_samples.png', transparent=True)
+  'images/gp_post_samples.png' # return this to org-mode
+
+#+end_src
+
+#+RESULTS:
+[[file:images/gp_post_samples.png]]
+
+** GP Posterior
+
+#+begin_src python :session gp :exports results :results file link
+  std = np.sqrt(np.diag(var))  # square root the variance to get standard deviation
+  fig = plt.figure(figsize=(12, 6))
+  plt.plot(x_star, f_post, zorder=0)  # plot samples from posterior
+  plt.plot(x_star, mu, 'c-', lw=3)
+  plt.plot(x_train, y_train, 'ko', ms=15)
+  plt.fill_between(x_star.flatten(), mu.flatten()-2*std, mu.flatten()+2*std, color="steelblue", alpha=0.3, lw=2, zorder=10)
+  plt.axis('off')
+  plt.savefig('images/gp_post_mu_var.png', transparent=True)
+  'images/gp_post_mu_var.png' # return this to org-mode
+#+end_src
+
+* Uncertainty in Machine Learning
+
+#+begin_src python :session gp :exports results :results file link :cache yes
+  from gp import gp_regression_noisy
+
+  func = lambda x: np.sin(x) + 0.5*np.cos(2*x) 
+  var_n = 0.4
+  n_train = 100
+
+  x_train = np.random.randn(n_train) * 3
+  x_train = np.sort(x_train)
+  y_train = func(x_train)
+  y_train[:40] += np.random.randn(*y_train[:40].shape) * 0.5
+  x_min = x_train.min()
+  x_max = x_train.max()
+
+  # x_star = np.random.randn(n).reshape(-1,1) # points we're going to make predictions at
+  n_test = 1000
+  x_star = np.linspace(x_min-10, x_max+5, n_test).reshape(-1,1) # points we're going to make predictions at
+  f_prior_noisy = sample(0, kernel(x_star, x_star), num_samples=50, jitter=jitter)  # draw samples from posterior
+  # x_train = np.array([-4.4, -0.1, 3.6]).reshape(-1, 1)
+  # y_train = np.array([-1.9, 1.2, -0.3]).reshape(-1, 1)
+  fig = plt.figure(figsize=(12, 6))
+  plt.axis('off')
+  plt.plot(x_star, f_prior_noisy)
+  plt.plot(x_train, y_train, 'ko', ms=15)
+  plt.xlim(-10, 12)
+  plt.savefig('images/gp_prior_100_data_noise.png', transparent=True)
+  'images/gp_prior_100_data_noise.png'
+#+end_src
+
+#+RESULTS:
+[[file:images/gp_prior_100_data_noise.png]]
+
+** Aleatoric Uncertainty
+
+#+begin_src python :session gp :exports results :results file link
+  mu_noisy, var_noisy = gp_regression_noisy(x_train, y_train, kernel, x_star, var_f=1.0, var_n=var_n, l=1.0)
+  f_post_noisy = sample(mu_noisy, var_noisy, num_samples=50, jitter=jitter)  # draw samples from posterior
+  std_noisy = np.sqrt(np.diag(var_noisy))  # square root the variance to get standard deviation
+  fig = plt.figure(figsize=(12, 6))
+  plt.plot(x_star, f_post_noisy, zorder=0)  # plot samples from posterior
+  plt.plot(x_star, mu_noisy, 'c-', lw=3)
+  plt.fill_between(x_star.flatten(), mu_noisy.flatten()-2*std_noisy, mu_noisy.flatten()+2*std_noisy, color="steelblue", alpha=0.3, lw=2, zorder=10)
+  plt.axis('off')
+  plt.plot(x_train, y_train, 'ko', ms=15)
+  # plt.xlim(-10,12)
+  plt.savefig('images/gp_post_100_data_noise.png', transparent=True)
+  'images/gp_post_100_data_noise.png'
+#+end_src
+
+#+RESULTS:
+[[file:images/gp_post_100_data_noise.png]]
+
+
+
