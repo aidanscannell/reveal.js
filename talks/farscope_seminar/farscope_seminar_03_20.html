@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Learning Probabilistic Transition Dynamics Models</title>
+<title>Handling Uncertainty in Learnt Probabilistic Transition Dynamics Models</title>
 <meta name="author" content="(Aidan Scannell)"/>
 <style type="text/css">
 .underline { text-decoration: underline; }
@@ -11,6 +11,7 @@
 
 <link rel="stylesheet" href="https://revealjs.com/css/theme/black.css" id="theme"/>
 
+<link rel="stylesheet" href="./custom.css"/>
 
 <!-- If the query includes 'print-pdf', include the PDF print sheet -->
 <script>
@@ -27,36 +28,126 @@
 <body>
 <div class="reveal">
 <div class="slides">
-<section id="sec-title-slide"><h1 class="title">Learning Probabilistic Transition Dynamics Models</h1><h2 class="author">Aidan Scannell</h2><p class="date">Created: 2020-02-17 Mon 15:04</p>
-</section>
-<section id="table-of-contents"><div id="table-of-contents">
-<h2>Table of Contents</h2>
-<div id="text-table-of-contents">
-<ul>
-<li><a href="#/slide-org65bf4fd">Gaussian Processes</a>
-<ul>
-<li><a href="#/slide-org0314234">Prior</a></li>
-<li><a href="#/slide-org248e9ca">Add Data</a></li>
-<li><a href="#/slide-org320df3b">Condition GP Prior on Data</a></li>
-<li><a href="#/slide-orgbcdb8ae">GP Posterior</a></li>
-</ul>
-</li>
-<li><a href="#/slide-org3b110fb">Uncertainty in Machine Learning</a>
-<ul>
-<li><a href="#/slide-orgbc02065">Aleatoric Uncertainty</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-</section>
+
 <section>
-<section id="slide-org65bf4fd">
-<h2 id="org65bf4fd">Gaussian Processes</h2>
+<section id="slide-org185f177">
+<h2 id="org185f177">Handling Uncertainty in Learnt Probabilistic Transition Dynamics Models</h2>
 <p>
-<b><b>Definition</b></b>: A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+Aidan Scannell | Carl Henrik Ek | Arthur Richards
 </p>
 
+<p>
+5th March 2020
+</p>
+
+<p>
+aidan.scannell@bristol.ac.uk
+</p>
+</section>
+</section>
+<section>
+<section id="slide-orge599ce2">
+<h2 id="orge599ce2">Uncertainty in Machine Learning</h2>
+<div class="outline-text-2" id="text-orge599ce2">
+</div>
+</section>
+<section id="slide-orgab6783d">
+<h3 id="orgab6783d">Incomplete Coverage of the Domain (Epistemic Uncertainty)</h3>
+
+<div class="figure">
+<p><img src="images/limited_data2.png" alt="limited_data2.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org86ed12e">
+<h3 id="org86ed12e">Noise in Data (Aleatoric Uncertainty)</h3>
+<div class="org-src-container">
+
+<pre  class="src src-python"><code trim>
+</code></pre>
+</div>
+
+
+
+<div class="figure">
+<p><img src="images/aleatoric.png" alt="aleatoric.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-org03e2d79">
+<h3 id="org03e2d79">Imperfect Models</h3>
+
+<div class="figure">
+<p><img src="images/imperfect_models.png" alt="imperfect_models.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgb54686c">
+<h2 id="orgb54686c">Bayesian Machine Learning</h2>
+<ul>
+<li>Goal is to infer parameters \(\theta\\\) from data,</li>
+<li>Then make predictions using our learned model.</li>
+
+</ul>
+
+<p>
+<i>Predictions vary depending on the type of task (classification, regression, clustering, etc)</i>
+</p>
+<aside class="notes">
+<p>
+Understanding how we make predictions is key to understanding why we care about modelling a distribution over the model parameters.
+</p>
+
+</aside>
+
+
+</section>
+<section id="slide-org32a964b">
+<h3 id="org32a964b">Bayes Rule</h3>
+<ul>
+<li>Observations \(\mathcal{D} = \{(\mathbf{x}, \mathbf{y})_n\}_{n=1}^N\) (supervised learning),</li>
+<li>Model parameters \(\pmb\theta\),</li>
+<li>We seek the posterior over the parameters,</li>
+
+</ul>
+<p>
+\[p(\mathbf{\theta}|\mathcal{D}) = \frac{p(\mathcal{D}|\mathbf{\theta})p(\mathbf{\theta})}{p(\mathcal{D})},\]
+</p>
+
+</section>
+<section id="slide-org638d30a">
+<h3 id="org638d30a"></h3>
+<p>
+so that we can make predictions,
+\[
+p(\mathbf{y}_*| \mathbf{x}_*, \mathcal{D}) = \int p(\mathbf{y}_* | \mathbf{x}_*, \theta, \mathcal{D}) p(\theta | \mathcal{D}) \text{d} \theta,
+\]
+where \(\mathbf{x}_*\) is a previously unseen test input and \(\mathbf{y}_*\) is its corresponding output value.
+</p>
+
+</section>
+<section id="slide-orgd1d2b72">
+<h3 id="orgd1d2b72"></h3>
+<p>
+This is very cool when you think about it!
+</p>
+</section>
+</section>
+<section>
+<section id="slide-org3f592d2">
+<h2 id="org3f592d2">Gaussian Processes</h2>
+<p>
+<b><b>Definition</b></b>: A collection of random variables, any finite number of which have a joint Gaussian distribution.
+</p>
+
+</section>
+<section id="slide-org4930ab2">
+<h3 id="org4930ab2">Gaussian Processes</h3>
 <p>
 A Gaussian process is completely specified by its mean function \(m(\mathbf{x})\) and its covariance function \(k(\mathbf{x}, \mathbf{x}')\),
 </p>
@@ -78,27 +169,27 @@ and we can write the Gaussian process as,
 </p>
 
 </section>
-<section id="slide-org0314234">
-<h3 id="org0314234">Prior</h3>
+<section id="slide-org8075227">
+<h3 id="org8075227">GP Prior</h3>
 
 <div class="figure">
 <p><img src="images/gp_prior.png" alt="gp_prior.png" />
 </p>
 </div>
 
+
 </section>
-<section id="slide-org248e9ca">
-<h3 id="org248e9ca">Add Data</h3>
+<section id="slide-orgf3ac2a4">
+<h3 id="orgf3ac2a4">Add Data</h3>
 
 <div class="figure">
 <p><img src="images/gp_prior_and_data.png" alt="gp_prior_and_data.png" />
 </p>
 </div>
 
-
 </section>
-<section id="slide-org320df3b">
-<h3 id="org320df3b">Condition GP Prior on Data</h3>
+<section id="slide-org2718216">
+<h3 id="org2718216">Condition GP Prior on Data</h3>
 
 <div class="figure">
 <p><img src="images/gp_post_samples.png" alt="gp_post_samples.png" />
@@ -106,8 +197,8 @@ and we can write the Gaussian process as,
 </div>
 
 </section>
-<section id="slide-orgbcdb8ae">
-<h3 id="orgbcdb8ae">GP Posterior</h3>
+<section id="slide-org6096b48">
+<h3 id="org6096b48">GP Posterior</h3>
 
 <div class="figure">
 <p><img src="images/gp_post_mu_var.png" alt="gp_post_mu_var.png" />
@@ -117,22 +208,479 @@ and we can write the Gaussian process as,
 </section>
 </section>
 <section>
-<section id="slide-org3b110fb">
-<h2 id="org3b110fb">Uncertainty in Machine Learning</h2>
-
-<div class="figure">
-<p><img src="images/gp_prior_100_data_noise.png" alt="gp_prior_100_data_noise.png" />
+<section id="slide-orgaba07ff">
+<h2 id="orgaba07ff">Background</h2>
+<p>
+Consider dynamical systems,
 </p>
+<div>
+\begin{align*}
+    \mathbf{s}_t &= f(\mathbf{s}_{t-1}, \mathbf{a}_{t-1})
+    \DeclareMathOperator{\E}{\mathbb{E}}
+    \DeclareMathOperator{\R}{\mathbb{R}}
+\end{align*}
+
+</div>
+
+<ul>
+<li>State \(\mathbf{s} \in \R^D\)</li>
+<li>Action \(\mathbf{a} \in \R^F\)</li>
+<li>Time \(t\)</li>
+<li>Transition dynamics \(f\)</li>
+
+</ul>
+
+</section>
+<section id="slide-orgce3aced">
+<h3 id="orgce3aced"></h3>
+<p>
+where,
+</p>
+
+<div>
+\begin{equation*}
+    f = \begin{cases}
+      f_1 + \epsilon_1 \\
+      f_2 + \epsilon_2 \\
+    \end{cases}
+\end{equation*}
+
+</div>
+<div>
+\begin{equation*}
+    \epsilon_i \sim \mathcal{N}(0, \Sigma_{i})\\ 
+    \epsilon_1 \gg \epsilon_2
+\end{equation*}
+
 </div>
 
 </section>
-<section id="slide-orgbc02065">
-<h3 id="orgbc02065">Aleatoric Uncertainty</h3>
+<section id="slide-orgd81e5de">
+<h3 id="orgd81e5de"></h3>
+<div>
+\begin{equation*}
+    \Delta x = f(x, y) 
+\end{equation*}
 
-<div class="figure">
-<p><img src="images/gp_post_100_data_noise.png" alt="gp_post_100_data_noise.png" />
-</p>
 </div>
+<img style="background:none; border:none; box-shadow:none;" src="images/trajectory.png" width="50%"/>
+
+</section>
+<section id="slide-org05bc6be">
+<h3 id="org05bc6be"></h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/quiver.png" width="70%"/>
+
+</section>
+</section>
+<section>
+<section id="slide-orgc89b5d7">
+<h2 id="orgc89b5d7">Model</h2>
+<img style="background:none; border:none; box-shadow:none;" src="images/graphical-model.png"/>
+
+</section>
+<section id="slide-orgcec3631">
+<h3 id="orgcec3631">Probability Time</h3>
+<ul>
+<li data-fragment-index="1" class="fragment roll-in">\begin{equation}
+  p(\mathbf{Y} | \mathbf{F}, \pmb{\alpha}) = {\displaystyle &prod;_{n=1}^{N}} \mathcal{N} (\mathbf{y}_n|\mathbf{f}_n^{(1)}, &epsilon;_1)^{&alpha;_n} \mathcal{N} (\mathbf{y}_n|\mathbf{f}_n^{(2)} &epsilon;_2)^{1 - &alpha;_n},
+\end{equation}</li>
+
+<li data-fragment-index="2" class="fragment roll-in">\begin{equation}
+  p(\mathbf{F} | \mathbf{X}) = &prod;^K_{k=1} \mathcal{N}(\mathbf{F}^{(k)}|\mathbf{0}, k^{(k)}({\mathbf{X},\mathbf{X}})),
+\end{equation}</li>
+
+<li data-fragment-index="3" class="fragment roll-in">\begin{equation}
+  p(h | \mathbf{X}) &sim; \mathcal{N}(h | &mu;_h(\mathbf{X}), k_h(\mathbf{X}, \mathbf{X}))
+\end{equation}</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf3889d7">
+<h2 id="orgf3889d7">Variational Approximation</h2>
+<img style="background:none; border:none; box-shadow:none;" src="images/augmented-graphical-model.png"/>
+
+</section>
+<section id="slide-orga2aa0ea">
+<h3 id="orga2aa0ea">Maths</h3>
+<p>
+As seen in \cite{Hensman}, for each GP we introduce a set of pseudo "samples" from the same prior,
+</p>
+<div>
+\begin{align}
+p(\mathbf{u}^{(k)} | \mathbf{Z}^{(k)}) &= \prod^F_{j=1} \mathcal{N}(\mathbf{u}_{:,j}^{(k)} | \mathbf{0}, k^{(k)}(\mathbf{Z}^{(k)}, \mathbf{Z}^{(k)})), \\
+p(\mathbf{u}_h | \mathbf{Z}_h) &= \mathcal{N}(\mathbf{u}_h | \mathbf{\mu}_h, k_h(\mathbf{Z}_h, \mathbf{Z}_h)),
+\end{align}
+
+</div>
+
+</section>
+<section id="slide-orgd71b846">
+<h3 id="orgd71b846"></h3>
+<p>
+The resulting augmented joint probability distribution takes the form,
+</p>
+<div>
+\begin{equation}
+\begin{split}
+	p(\mathbf{Y}, \mathbf{F}, \pmb{\alpha}, \mathbf{H}, \mathbf{U} | \mathbf{X}, \mathbf{Z}) = &\ p(\pmb{\alpha}|\mathbf{h}) p(\mathbf{h} | \mathbf{u}_h, \mathbf{X}, \mathbf{Z}_h) p(\mathbf{u}_h | \mathbf{Z}_h) \\ 
+  \prod^K_{k=1} \prod^F_{j=1} p(\mathbf{y}_{:,j} | &\mathbf{f}^{(k)}_{:,j}, \pmb{\alpha}) p(\mathbf{f}^{(k)}_{:,j} | \mathbf{u}_{:,j}^{(k)}, \mathbf{X})  p(\mathbf{u}_{:,j}^{(k)} | \mathbf{Z}^{(k)}) 
+\end{split}
+\end{equation}
+
+</div>
+
+</section>
+<section id="slide-org3013917">
+<h3 id="org3013917"></h3>
+<p>
+The variational posteriors of our dynamics \(\mathbf{F}\) and separation manifold \(\mathbf{H}\) take the form,
+</p>
+<div>
+\begin{align}
+	q(\mathbf{F}^{(k)} | \mathbf{X}) &= \int q(\mathbf{U}^{(k)}) \prod^N_{n=1} p(\mathbf{f}^{(k)}_n | \mathbf{U}^{(k)}, \mathbf{x}_n) \text{d} \mathbf{U}^{(k)}, \\
+	q(\mathbf{H} | \mathbf{X}) &= \int q(\mathbf{U}_h) \prod^N_{n=1} p(\mathbf{h}_n | \mathbf{U}_h, \mathbf{x}_n) \text{d} \mathbf{U}_h.
+\end{align}
+
+</div>
+
+</section>
+<section id="slide-orgbd4e09d">
+<h3 id="orgbd4e09d"></h3>
+<p>
+Our variational posterior takes the factorized form,
+</p>
+<div>
+\begin{equation}
+	q(\mathbf{H}, \mathbf{F}, \mathbf{U}) = \prod^K_{k=1} \displaystyle\prod_{n=1}^N p(\mathbf{h}_n | \mathbf{U}_h, \mathbf{x}_n) q(\mathbf{U}_h) p(\mathbf{f}^{(k)}_n | \mathbf{U}^{(k)}, \mathbf{x}_n) q(\mathbf{U}^{(k)}).
+\end{equation}
+
+</div>
+
+</section>
+<section id="slide-orgccabe50">
+<h3 id="orgccabe50">Lower Bound</h3>
+<div>
+\begin{align}
+	\mathcal{L} &= \sum_{n=1}^N \E_{q(\mathbf{h}_n)}\bigg[\text{log}\ p(\mathbf{y}_n | \mathbf{f}_n, \pmb{\alpha}_n) p(\pmb{\alpha}_n | \mathbf{h}_n)  \bigg] \\
+	&+ \sum_{n=1}^N \E_{q(\mathbf{f}_n)}\bigg[\text{log}\ p(\mathbf{y}_n | \mathbf{f}_n, \pmb{\alpha}_n) p(\pmb{\alpha}_n | \mathbf{h}_n)  \bigg] \\
+	&\ - \text{KL}(q(\mathbf{U}_h) || p(\mathbf{U}_h)) \\
+	&\ - \sum^K_{k=1} \text{KL}(q(\mathbf{U}^{(k)}) || p(\mathbf{U}^{(k)})).
+\end{align}
+
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgdc4cf22">
+<h2 id="orgdc4cf22">Results</h2>
+<p class="fragment fade-in-then-out">Remember $$\Delta x = f(x, y)$$</p>
+
+<p class="fragment fade-in"><img style="background:none; border:none; box-shadow:none;" src="images/member-berries.jpg" width="500px"/></p>
+
+</section>
+<section id="slide-org4ff0f03">
+<h3 id="org4ff0f03">\(\Delta x\)</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/y_dim_1.png" height="80%" width="100%"/>
+
+</section>
+<section id="slide-org3582356">
+<h3 id="org3582356">\(f_1\)</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/f1_dim_1.png" width="1900px"/>
+
+</section>
+<section id="slide-orgf25a67d">
+<h3 id="orgf25a67d">\(f_2\)</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/f2_dim_1.png" width="1900px"/>
+
+</section>
+<section id="slide-org3a67844">
+<h3 id="org3a67844">\(h\)</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/h.png" width="1900px"/>
+
+</section>
+<section id="slide-org9e30ad4">
+<h3 id="org9e30ad4">\(\alpha\)</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/alpha.png" width="1900px"/>
+
+</section>
+</section>
+<section>
+<section id="slide-org008a7d1">
+<h2 id="org008a7d1">Ok Great, But Why???</h2>
+</section>
+</section>
+<section>
+<section id="slide-org9dee9f8">
+<h2 id="org9dee9f8">Trajectory Optimisation</h2>
+<p>
+Want to find a trajectory (curve) in \(\mathbf{X} \in \R^2\) that,
+</p>
+
+<ol>
+<li>Connects two points,</li>
+<li>Minimises distance,</li>
+<li>Avoids high aleatoric uncertainty (turbulence),</li>
+<li>Avoids high epistemic uncertainty (no data),</li>
+
+</ol>
+
+</section>
+<section id="slide-org96cb328">
+<h3 id="org96cb328">What?</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/dx_quiver.png" width="500px"/>
+
+</section>
+<section id="slide-org6e0d829">
+<h3 id="org6e0d829">Let's Use Our Model!</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/h.png" height="80%" width="100%"/>
+<img style="background:none; border:none; box-shadow:none;" src="images/f1_dim_1.png" height="80%" width="100%"/>
+
+</section>
+</section>
+<section>
+<section id="slide-org1da7f18">
+<h2 id="org1da7f18">Geodesics</h2>
+<p>
+<b>Geodesic</b>: Given two points \(\mathbf{x}_1, \mathbf{x}_2 \in
+\mathcal{M}\), a Geodesic is a length minimising curve \(\mathbf{c}_g\) connecting the points such
+that,
+</p>
+<div>
+\begin{align}
+  \mathbf{c}_{g}=\arg \min _{\mathbf{c}} \operatorname{Length}(\mathbf{c}), \quad \mathbf{c}(0)=\mathbf{x}_{1}, \mathbf{c}(1)=\mathbf{x}_{2}.
+\end{align}
+
+</div>
+
+</section>
+<section id="slide-orge2ecb6f">
+<h3 id="orge2ecb6f">How do we Calculate Lengths on Manifolds??</h3>
+
+</section>
+<section id="slide-org568e519">
+<h3 id="org568e519">Riemannian Metric</h3>
+<p>
+A Riemannian metric \(\mathbf{G}\) on a
+manifold \(\mathcal{M}\) is a symmetric and positive definite matrix which defines
+a smoothly varying inner product,
+</p>
+<div>
+\begin{align}
+  \langle \mathbf{a}, \mathbf{b} \rangle_x = \mathbf{a}^T \mathbf{G}(x) \mathbf{b}
+\end{align}
+
+</div>
+<p>
+in the tangent space \(T_x\mathcal{M}\), for each point \(x \in \mathcal{M}\) and
+\(\mathbf{a}, \mathbf{b} \in T_x\mathcal{M}\). The matrix \(\mathbf{G}\) is called
+the metric tensor.
+</p>
+
+</section>
+<section id="slide-org3b33759">
+<h3 id="org3b33759">Let's Imagine a Random Manifold</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/original_gp_mean.png" height="80%" width="100%"/>
+</section>
+<section id="slide-org989e3f2">
+<h3 id="org989e3f2">Let's Visualise Quiver of G(x)</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/gradient_mean_quiver_just_mean.png" height="80%" width="100%"/>
+</section>
+<section id="slide-org0345653">
+<h3 id="org0345653">Let's Visualise Contour of Each Dimension G(x)</h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/gradient_mean.png" height="80%" width="100%"/>
+
+</section>
+<section id="slide-org2eb7c0e">
+<h3 id="org2eb7c0e">Lengths on Manifolds</h3>
+<p>
+On a Riemannian manidold \(\mathcal{M}\), the length of a curce \(\mathbf{c} : [0, 1]
+\rightarrow \mathcal{M}\) is given by the norm of the tangent vector (velocity)
+along the curve,
+</p>
+<div>
+\begin{align}\label{eq:length}
+  \text { Length }(\mathbf{c}) &=\int_{0}^{1}\left\|\mathbf{c}^{\prime}(\lambda)\right\|_{\mathbf{G}(\mathbf{c}(\lambda))} \mathrm{d} \lambda \\
+  &=\int_{0}^{1} \sqrt{\mathbf{c}^{\prime}(\lambda)^{T} \mathbf{G}(\mathbf{c}(\lambda)) \mathbf{c}^{\prime}(\lambda)} \mathrm{d} \lambda
+\end{align}
+
+</div>
+<p>
+where \(\mathbf{c}'\) denotes the derivative of \(\mathbf{c}\) and \(\mathbf{G}(\mathbf{c}(\lambda))\) is the metric tensor at \(\mathbf{c}(\lambda)\).
+</p>
+
+</section>
+<section id="slide-orgf29de29">
+<h3 id="orgf29de29"></h3>
+<p>
+It follows that Geodesics satisfy the following second order ODE,
+</p>
+<div>
+\begin{align*}  
+\mathbf{c}^{\prime \prime}(\lambda)&=\mathbf{f}\left(\lambda, \mathbf{c}, \mathbf{c}^{\prime}\right)
+  \\
+  &=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{c}(\lambda))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{c}(\lambda))]}{\partial \mathbf{c}(\lambda)}\right]^{T}\left(\mathbf{c}^{\prime}(\lambda) \otimes \mathbf{c}^{\prime}(\lambda)\right)
+\end{align*}
+
+</div>
+
+</section>
+<section id="slide-orga7d1989">
+<h3 id="orga7d1989"></h3>
+<p>
+Which can be expressed as a system of 1st order equations.
+</p>
+
+<p>
+Let \(\mathbf{g}(\lambda) = \mathbf{c}'(\lambda)\)
+and solve for \(\mathbf{c}\) and \(\mathbf{c}'\),
+</p>
+<div>
+\begin{align}
+  \label{eq:1ode}
+  \left[\begin{array}{l}
+          {\mathbf{c}^{\prime}(\lambda)} \\
+          {\mathbf{g}^{\prime}(\lambda)}
+        \end{array}\right]=\left[\begin{array}{c}
+                                   {\mathbf{g}(\lambda)} \\
+                                   {\mathbf{f}(\lambda, \mathbf{c}, \mathbf{g})}
+                                 \end{array}\right]
+\end{align}
+
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf34f1ff">
+<h2 id="orgf34f1ff">Probabilistic Geodesics</h2>
+<p>
+Let's introduce the following Reimannian metric,
+</p>
+<div>
+\begin{align}
+  \langle \mathbf{a}, \mathbf{b} \rangle_x = \mathbf{a}^T \mathbf{J}^T \mathbf{J} \mathbf{b} =
+  \mathbf{a}^T \mathbf{G}(x) \mathbf{b}
+\end{align}
+
+</div>
+<p>
+where \(\mathbf{J}\) denotes the Jacobian of h,
+</p>
+<div>
+\begin{align}
+  [\mathbf{J}]_{j}=\frac{\partial h}{\partial l_{j}} = \bigg[ \frac{\partial h}{\partial x}, \frac{\partial h}{\partial y} \bigg].
+\end{align}
+
+</div>
+
+</section>
+<section id="slide-org0c427b5">
+<h3 id="org0c427b5">Quick Maths</h3>
+<ul>
+<li>The differential operator is linear so the derivative of a GP is again a GP,</li>
+<li>So the Jacobian and the output are jointly Gaussian,</li>
+
+</ul>
+
+<div>
+\begin{align}
+\left[\begin{array}{c}
+        {\mathbf{Y}} \\
+        {\frac{\partial \mathbf{y}_{*}}{\partial \mathbf{x}}}
+      \end{array}\right] \sim \mathcal{N}\left(\mathbf{0},\left[\begin{array}{cc}
+                                                                  {\mathbf{K}_{\mathbf{x}, \mathbf{x}}} & {\partial \mathbf{K}_{\mathbf{x}, *}} \\
+                                                                  {\partial \mathbf{K}_{\mathbf{x}, *}^{\top}} & {\partial^{2} \mathbf{K}_{*, *}}
+                                                                \end{array}\right]\right).
+\end{align}
+
+</div>
+
+</section>
+<section id="slide-orgf33dbfc">
+<h3 id="orgf33dbfc"></h3>
+<p>
+This means that we can easily obtain the conditional distribution \(p(\mathbf{J} | \mathbf{X}, \mathbf{Y}, \mathbf{x}_*)\),
+</p>
+<div>
+\begin{align}
+  p(\mathbf{J} | \mathbf{Y}, \mathbf{X}, \mathbf{x}_*) &= \prod^p_{j=1} (\pmb{\mu}_{J(j,:)}, \mathbf{\Sigma}_J), \\
+  \pmb{\mu}_{J(j,:)} &= \partial\mathbf{K}^T_{x,*} \mathbf{K}^{-1}_{x,x} \mathbf{Y}_{:,j},  \\
+  \mathbf{\Sigma}_J &= \partial^2\mathbf{K}_{*,*} - \partial\mathbf{K}_{x,*}^T \mathbf{K}^{-1}_{x,x} \partial \mathbf{K}_{x,*}.
+\end{align}
+
+</div>
+
+</section>
+<section id="slide-orgfaba002">
+<h3 id="orgfaba002"></h3>
+<p>
+Suppose we draw \(n\) samples from this \(D-\) dimensional normal distribution to get
+a matrix \(\mathbf{J}_* \in \R^{D \times n}\).
+This induces a non-central Wishart distribution over the metric tensor \(\mathbf{G}\),
+</p>
+<div>
+\begin{align}
+  \mathbf{G}=\mathcal{W}_{q}\left(p, \boldsymbol{\Sigma}_{J}, \mathbb{E}\left[\mathbf{J}^{\top}\right] \mathbb{E}[\mathbf{J}]\right),
+\end{align}
+
+</div>
+<p>
+as the Wishart distribution is the probability dist of the \(D \times D\) random matrix
+\(\mathbf{G}_* = \mathbf{J}_* \mathbf{J}_*^T\), known as the scatter matrix.
+</p>
+
+</section>
+<section id="slide-org29af079">
+<h3 id="org29af079"></h3>
+<p>
+The expected metric tensor is then given by,
+</p>
+<div>
+\begin{align}
+  \E[\mathbf{J}^T \mathbf{J}] = \E[\mathbf{J}^T] \E[\mathbf{J}] + p \mathbf{\Sigma}_J.
+\end{align}
+
+</div>
+<p>
+The expected metric tensor includes a covariance term \(p \mathbf{\Sigma}_J\) which implies that the
+metric is larger when the uncertainty in the mapping is higher. This is exactly
+what we wanted from our metric tensor!
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org1ff0968">
+<h2 id="org1ff0968">Pretty Plots</h2>
+<img style="background:none; border:none; box-shadow:none;" src="images/gradient_mean_quiver.png" height="80%" width="100%"/>
+<img style="background:none; border:none; box-shadow:none;" src="images/gradient_mean.png" height="80%" width="100%"/>
+
+</section>
+<section id="slide-orgbbfab86">
+<h3 id="orgbbfab86"></h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/gradient_variance_quiver.png" height="80%" width="100%"/>
+<img style="background:none; border:none; box-shadow:none;" src="images/gradient_variance.png" height="80%" width="100%"/>
+</section>
+<section id="slide-org6d0a014">
+<h3 id="org6d0a014"></h3>
+<img style="background:none; border:none; box-shadow:none;" src="images/trace(G(x)).png" height="80%" width="100%"/>
+<img style="background:none; border:none; box-shadow:none;" src="images/G(x).png" height="80%" width="100%"/>
+
+</section>
+</section>
+<section>
+<section id="slide-orge5ff438">
+<h2 id="orge5ff438">Results</h2>
+<img style="background:none; border:none; box-shadow:none;" src="images/optimised-geodesic.png" width="100%"/>
+</section>
+</section>
+<section>
+<section id="slide-org1b349be">
+<h2 id="org1b349be">Thanks for Listening!</h2>
 </section>
 </section>
 </div>

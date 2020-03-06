@@ -1,15 +1,119 @@
-#+TITLE: Learning Probabilistic Transition Dynamics Models
+#+TITLE: Handling Uncertainty in Learnt Probabilistic Transition Dynamics Models
 #+AUTHOR: Aidan Scannell
 #+EMAIL: aidan.scannell@bristol.ac.uk
+#+DATE: 05-03-2020
 #+REVEAL_THEME: black
-#+OPTIONS: num:nil toc:t ^:nil
+#+OPTIONS: num:nil toc:nil ^:nil reveal_title_slide:nil
+#+REVEAL_TRANS: linear
+# #+REVEAL_TITLE_SLIDE: %t:hello
+# #+REVEAL_TITLE_SLIDE: %a:woe
+# #+REVEAL_TITLE_SLIDE: %d:data
+#+REVEAL_EXTRA_CSS: ./custom.css
+
+* Handling Uncertainty in Learnt Probabilistic Transition Dynamics Models
+Aidan Scannell | Carl Henrik Ek | Arthur Richards
+
+5th March 2020
+
+aidan.scannell@bristol.ac.uk
 
 # \institute{University of Bristol | University of the West of England | Bristol Robotics Laboratory}
 # Uncertainty Quantification | Data Efficient | Probabilistic Modelling}
+* Uncertainty in Machine Learning
+
+** Incomplete Coverage of the Domain (Epistemic Uncertainty)
+
+  # from gp import gp_regression_noisy
+
+  # func = lambda x: np.sin(x) + 0.5*np.cos(2*x) 
+  # var_n = 0.4
+  # n_train = 100
+
+  # x_train = np.random.randn(n_train) * 3
+  # x_train = np.sort(x_train)
+  # y_train = func(x_train)
+  # y_train[:40] += np.random.randn(*y_train[:40].shape) * 0.5
+  # x_min = x_train.min()
+  # x_max = x_train.max()
+
+  # # x_star = np.random.randn(n).reshape(-1,1) # points we're going to make predictions at
+  # n_test = 1000
+  # x_star = np.linspace(x_min-10, x_max+5, n_test).reshape(-1,1) # points we're going to make predictions at
+  # f_prior_noisy = sample(0, kernel(x_star, x_star), num_samples=50, jitter=jitter)  # draw samples from posterior
+  # # x_train = np.array([-4.4, -0.1, 3.6]).reshape(-1, 1)
+  # # y_train = np.array([-1.9, 1.2, -0.3]).reshape(-1, 1)
+  # fig = plt.figure(figsize=(12, 6))
+  # plt.axis('off')
+  # plt.plot(x_star, f_prior_noisy)
+  # plt.plot(x_train, y_train, 'ko', ms=15)
+  # plt.xlim(-10, 12)
+  # plt.savefig('images/gp_prior_100_data_noise.png', transparent=True)
+  # 'images/gp_prior_100_data_noise.png'
+#+begin_src python :session gp :exports results :results file link :cache yes
+#+end_src
+
+# #+RESULTS:
+# [[file:images/gp_prior_100_data_noise.png]]
+
+[[file:images/limited_data2.png]]
+
+** Noise in Data (Aleatoric Uncertainty)
+
+ #  # f_post_noisy = sample(mu_noisy, var_noisy, num_samples=50, jitter=jitter)  # draw samples from posterior
+ #  # std_noisy = np.sqrt(np.diag(var_noisy))  # square root the variance to get standard deviation
+ #  # fig = plt.figure(figsize=(12, 6))
+ #  # plt.plot(x_star, f_post_noisy, zorder=0)  # plot samples from posterior
+ #  # plt.plot(x_star, mu_noisy, 'c-', lw=3)
+ #  # plt.fill_between(x_star.flatten(), mu_noisy.flatten()-2*std_noisy, mu_noisy.flatten()+2*std_noisy, color="steelblue", alpha=0.3, lw=2, zorder=10)
+ #  # plt.axis('off')
+ #  # plt.plot(x_train, y_train, 'ko', ms=15)
+ #  # # plt.xlim(-10,12)
+ #  # plt.savefig('images/gp_post_100_data_noise.png', transparent=True)
+ #  # 'images/gp_post_100_data_noise.png'
+ # gp :exports results :results file link
+#+begin_src python :session  # mu_noisy, var_noisy = gp_regression_noisy(x_train, y_train, kernel, x_star, var_f=1.0, var_n=var_n, l=1.0)
+#+end_src
+
+# #+RESULTS:
+# [[file:images/gp_post_100_data_noise.png]]
+
+
+[[file:images/aleatoric.png]]
+
+** Imperfect Models
+[[file:images/imperfect_models.png]]
+
+* Bayesian Machine Learning
+
+- Goal is to infer parameters $\theta\\$ from data, 
+- Then make predictions using our learned model.
+
+/Predictions vary depending on the type of task (classification, regression, clustering, etc)/
+#+BEGIN_NOTES
+Understanding how we make predictions is key to understanding why we care about modelling a distribution over the model parameters.
+#+END_NOTES
+
+
+** Bayes Rule
+- Observations $\mathcal{D} = \{(\mathbf{x}, \mathbf{y})_n\}_{n=1}^N$ (supervised learning),
+- Model parameters $\pmb\theta$, 
+- We seek the posterior over the parameters,
+$$p(\mathbf{\theta}|\mathcal{D}) = \frac{p(\mathcal{D}|\mathbf{\theta})p(\mathbf{\theta})}{p(\mathcal{D})},$$
+
+** 
+so that we can make predictions,
+$$
+p(\mathbf{y}_*| \mathbf{x}_*, \mathcal{D}) = \int p(\mathbf{y}_* | \mathbf{x}_*, \theta, \mathcal{D}) p(\theta | \mathcal{D}) \text{d} \theta,
+$$
+where $\mathbf{x}_*$ is a previously unseen test input and $\mathbf{y}_*$ is its corresponding output value.
+
+** 
+This is very cool when you think about it!
 * Gaussian Processes
 
-	**Definition**: A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+	**Definition**: A collection of random variables, any finite number of which have a joint Gaussian distribution.
 
+** Gaussian Processes
 	A Gaussian process is completely specified by its mean function $m(\mathbf{x})$ and its covariance function $k(\mathbf{x}, \mathbf{x}')$,
 
 	\begin{align}
@@ -21,10 +125,12 @@
 
 	$$f(\mathbf{x}) \sim \mathcal{GP}(m(\mathbf{x}), k(\mathbf{x}, \mathbf{x}')).$$
   
-** Prior
+** GP Prior
 
 #+begin_src python :session gp :exports results :results file link
   # use gp-pres-env (pyvenv-workon)
+  import sys
+  sys.path.append("Users/aidanscannell/reveal.js/scripts")
   import numpy as np
   import matplotlib.pyplot as plt
   from scipy.spatial.distance import cdist
@@ -43,8 +149,6 @@
 
 #+end_src
 
-#+RESULTS:
-[[file:images/gp_prior.png]]
 
 ** Add Data
 
@@ -57,13 +161,12 @@
     fig = plt.figure(figsize=(12, 6))
     plt.axis('off')
     plt.plot(x_star, f_prior)
-    plt.plot(x_train, y_train, 'ko', ms=15)
+    plt.plot(x_train, y_train, 'wo', ms=15)
 
     plt.savefig('images/gp_prior_and_data.png', transparent=True)
     'images/gp_prior_and_data.png' # return this to org-mode
 
 #+end_src
-
 
 ** Condition GP Prior on Data
 
@@ -74,7 +177,7 @@
 
   fig = plt.figure(figsize=(12, 6))
   plt.plot(x_star, f_post)  # plot samples from posterior
-  plt.plot(x_train, y_train, 'ko', ms=15)
+  plt.plot(x_train, y_train, 'wo', ms=15)
   plt.axis('off')
   plt.savefig('images/gp_post_samples.png', transparent=True)
   'images/gp_post_samples.png' # return this to org-mode
@@ -91,66 +194,391 @@
   fig = plt.figure(figsize=(12, 6))
   plt.plot(x_star, f_post, zorder=0)  # plot samples from posterior
   plt.plot(x_star, mu, 'c-', lw=3)
-  plt.plot(x_train, y_train, 'ko', ms=15)
+  plt.plot(x_train, y_train, 'wo', ms=15)
   plt.fill_between(x_star.flatten(), mu.flatten()-2*std, mu.flatten()+2*std, color="steelblue", alpha=0.3, lw=2, zorder=10)
   plt.axis('off')
   plt.savefig('images/gp_post_mu_var.png', transparent=True)
   'images/gp_post_mu_var.png' # return this to org-mode
 #+end_src
 
-* Uncertainty in Machine Learning
+* Background
+    Consider dynamical systems,
+    \begin{align*}
+        \mathbf{s}_t &= f(\mathbf{s}_{t-1}, \mathbf{a}_{t-1})
+        \DeclareMathOperator{\E}{\mathbb{E}}
+        \DeclareMathOperator{\R}{\mathbb{R}}
+    \end{align*}
+    
+    * State $\mathbf{s} \in \R^D$
+    * Action $\mathbf{a} \in \R^F$ 
+    * Time $t$
+    * Transition dynamics $f$
+   
+**  
+    where,
+    
+    \begin{equation*}
+        f = \begin{cases}
+          f_1 + \epsilon_1 \\
+          f_2 + \epsilon_2 \\
+        \end{cases}
+    \end{equation*}
+    \begin{equation*}
+        \epsilon_i \sim \mathcal{N}(0, \Sigma_{i})\\ 
+        \epsilon_1 \gg \epsilon_2
+    \end{equation*}
 
-#+begin_src python :session gp :exports results :results file link :cache yes
-  from gp import gp_regression_noisy
+** 
+    \begin{equation*}
+        \Delta x = f(x, y) 
+    \end{equation*}
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/trajectory.png" width="50%"/>
+# ** 
+# [[file:images/trajectory.png]]
 
-  func = lambda x: np.sin(x) + 0.5*np.cos(2*x) 
-  var_n = 0.4
-  n_train = 100
+** 
+# [[file:images/quiver.png]]
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/quiver.png" width="70%"/>
 
-  x_train = np.random.randn(n_train) * 3
-  x_train = np.sort(x_train)
-  y_train = func(x_train)
-  y_train[:40] += np.random.randn(*y_train[:40].shape) * 0.5
-  x_min = x_train.min()
-  x_max = x_train.max()
+* Model
+#+HEADER: :file ./images/graphical-model.png :imagemagick yes
+#+HEADER: :results output link :headers '("\\usepackage{tikz}")
+#+HEADER: :fit yes :imoutoptions -geometry 500 :iminoptions -density 600
+#+BEGIN_src latex
+  \usetikzlibrary{bayesnet}
+  \tikzset{
+      -|/.style={to path={-| (\tikztotarget)}},
+      |-/.style={to path={|- (\tikztotarget)}},
+  }
+  \begin{tikzpicture}[
+        pre/.style={<-,shorten <=1pt,>=stealth',semithick},
+        post/.style={->,shorten >=1pt,>=stealth',semithick}
+    ]
+    \definecolor{obs}{RGB}{170, 3, 196}
+    \definecolor{dynamics}{RGB}{14, 77, 211}
+    \definecolor{separation}{RGB}{14, 77, 211}
+    \definecolor{a}{RGB}{14, 77, 211}
+    \definecolor{line}{RGB}{255,255,255}
 
-  # x_star = np.random.randn(n).reshape(-1,1) # points we're going to make predictions at
-  n_test = 1000
-  x_star = np.linspace(x_min-10, x_max+5, n_test).reshape(-1,1) # points we're going to make predictions at
-  f_prior_noisy = sample(0, kernel(x_star, x_star), num_samples=50, jitter=jitter)  # draw samples from posterior
-  # x_train = np.array([-4.4, -0.1, 3.6]).reshape(-1, 1)
-  # y_train = np.array([-1.9, 1.2, -0.3]).reshape(-1, 1)
-  fig = plt.figure(figsize=(12, 6))
-  plt.axis('off')
-  plt.plot(x_star, f_prior_noisy)
-  plt.plot(x_train, y_train, 'ko', ms=15)
-  plt.xlim(-10, 12)
-  plt.savefig('images/gp_prior_100_data_noise.png', transparent=True)
-  'images/gp_prior_100_data_noise.png'
-#+end_src
+    \tikzset{colorscope/.style={every path/.style={draw=white, line width=1.pt, text=white}}}
+  
+    \begin{scope}[colorscope]
+    \node[obs, fill=obs] (x) {$\mathbf{x}_n$};
+    \node[latent, xshift=-1.2cm, below=of x, fill=dynamics] (f) {$f_K$};
+    \node[obs, below=of f, xshift=1.2cm, fill=obs] (y) {$\mathbf{y}_n$};
+    \node[latent, xshift=2.4cm, below=of x, fill=separation] (h) {$h$};
+    \node[latent, below=of h, xshift=-1.2cm, fill=a] (a) {$\alpha_n$};
 
-#+RESULTS:
-[[file:images/gp_prior_100_data_noise.png]]
+    % \edge {a} {y};
+    \draw[post] (a)->(y);  
+    \draw[post] (x)-|(f);  
+    \draw[post] (f)|-(y);  
+    \draw[post] (x)-|(h);  
+    \draw[post] (h)|-(a);
+    \plate {} {(x) (y) (a)} {$N$};
+    \plate {} {(f)} {$K$};
+    \end{scope}
+  \end{tikzpicture}
+  % \end{tikzpicture}
+#+END_src
 
-** Aleatoric Uncertainty
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/graphical-model.png"/>
+# [[./images/contour.png]]
 
-#+begin_src python :session gp :exports results :results file link
-  mu_noisy, var_noisy = gp_regression_noisy(x_train, y_train, kernel, x_star, var_f=1.0, var_n=var_n, l=1.0)
-  f_post_noisy = sample(mu_noisy, var_noisy, num_samples=50, jitter=jitter)  # draw samples from posterior
-  std_noisy = np.sqrt(np.diag(var_noisy))  # square root the variance to get standard deviation
-  fig = plt.figure(figsize=(12, 6))
-  plt.plot(x_star, f_post_noisy, zorder=0)  # plot samples from posterior
-  plt.plot(x_star, mu_noisy, 'c-', lw=3)
-  plt.fill_between(x_star.flatten(), mu_noisy.flatten()-2*std_noisy, mu_noisy.flatten()+2*std_noisy, color="steelblue", alpha=0.3, lw=2, zorder=10)
-  plt.axis('off')
-  plt.plot(x_train, y_train, 'ko', ms=15)
-  # plt.xlim(-10,12)
-  plt.savefig('images/gp_post_100_data_noise.png', transparent=True)
-  'images/gp_post_100_data_noise.png'
-#+end_src
+# #+header: :exports results :file graphical-model.png 
+# #+header: :fit yes :noweb yes :headers '("\\usepackage{tikz} "\usepackage{graphicx}")
+# # \usepackage{pgfplots}
+# #+header: :imagemagick yes :imino
+# \usetikzlibrary{bayesnet}
+#   \tikzset{
+#       -|/.style={to path={-| (\tikztotarget)}},
+#       |-/.style={to path={|- (\tikztotarget)}},
+#   }
 
-#+RESULTS:
-[[file:images/gp_post_100_data_noise.png]]
+** Probability Time
+
+#+ATTR_REVEAL: :frag (roll-in roll-in roll-in) :frag_idx (1 2 3)
+  * \begin{equation}
+      p(\mathbf{Y} | \mathbf{F}, \pmb{\alpha}) = {\displaystyle \prod_{n=1}^{N}} \mathcal{N}	(\mathbf{y}_n|\mathbf{f}_n^{(1)}, \epsilon_1)^{\alpha_n} \mathcal{N}	(\mathbf{y}_n|\mathbf{f}_n^{(2)} \epsilon_2)^{1 - \alpha_n},
+    \end{equation}
+
+  * \begin{equation}
+      p(\mathbf{F} | \mathbf{X}) = \prod^K_{k=1} \mathcal{N}(\mathbf{F}^{(k)}|\mathbf{0}, k^{(k)}({\mathbf{X},\mathbf{X}})),
+    \end{equation}
+    
+  * \begin{equation}
+      p(h | \mathbf{X}) \sim \mathcal{N}(h | \mu_h(\mathbf{X}), k_h(\mathbf{X}, \mathbf{X}))
+    \end{equation}
+
+* Variational Approximation
+
+#+HEADER: :file ./images/augmented-graphical-model.png :imagemagick yes
+#+HEADER: :results output link :headers '("\\usepackage{tikz}")
+#+HEADER: :fit yes :imoutoptions -geometry 800 :iminoptions -density 600
+#+BEGIN_src latex
+  \usetikzlibrary{bayesnet}
+  \tikzset{
+      -|/.style={to path={-| (\tikztotarget)}},
+      |-/.style={to path={|- (\tikztotarget)}},
+  }
+  \begin{tikzpicture}
+  % \begin{tikzpicture}[
+  %         pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+  %         post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+  %     ]
+      \definecolor{obs}{RGB}{170, 3, 196}
+      \definecolor{global}{RGB}{0, 128, 0}
+      \definecolor{local}{RGB}{14, 77, 211}
+
+      \tikzset{colorscope/.style={every path/.style={draw=white, line width=1.pt, text=white}}}
+
+      \begin{scope}[colorscope]
+      \node[obs, fill=obs] (x) {$\mathbf{x}_n$};
+      \node[latent, xshift=-1.2cm, below=of x, fill=local] (f) {$\mathbf{f}^{(k)}_n$};
+      \node[obs, below=of f, xshift=1.2cm, fill=obs] (y) {$\mathbf{y}_n$};
+      \node[latent, xshift=1.2cm, below=of x, fill=local] (h) {$\mathbf{h}_n$};
+      \node[latent, below=of h, yshift=-0.08cm, fill=local] (a) {$\alpha_n$};
+
+      \node[latent, left=of f, xshift=0.4cm, fill=global] (uk) {$\mathbf{U}^{(k)}$};
+      \node[latent, right=of h, xshift=-0.4cm, fill=global] (uh) {$\mathbf{U}_h$};
+      \node[const, left=of uk, xshift=0.4cm, fill=global] (zk) {$\mathbf{Z}^{(k)}$};
+      \node[const, right=of uh, xshift=-0.4cm, fill=global] (zh) {$\mathbf{Z}_h$};
+
+      \draw[post] (a)--(y);
+      \draw[post] (x)-|(f);  
+      \draw[post] (f)|-(y);  
+      \draw[post] (x)-|(h);  
+      \draw[post] (h)--(a);  
+      \draw[post] (uk)--(f);
+      \draw[post] (uh)--(h);
+      \draw[post] (zk)--(uk);
+      \draw[post] (zh)--(uh);
+    
+      \plate {} {(x) (y) (a) (f)} {$N$};
+      \plate {} {(zk) (uk) (f)} {$K$};
+    \end{scope}
+    \end{tikzpicture}
+#+END_SRC
+
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/augmented-graphical-model.png"/>
+
+** Maths
+
+As seen in \cite{Hensman}, for each GP we introduce a set of pseudo "samples" from the same prior,
+\begin{align}
+p(\mathbf{u}^{(k)} | \mathbf{Z}^{(k)}) &= \prod^F_{j=1} \mathcal{N}(\mathbf{u}_{:,j}^{(k)} | \mathbf{0}, k^{(k)}(\mathbf{Z}^{(k)}, \mathbf{Z}^{(k)})), \\
+p(\mathbf{u}_h | \mathbf{Z}_h) &= \mathcal{N}(\mathbf{u}_h | \mathbf{\mu}_h, k_h(\mathbf{Z}_h, \mathbf{Z}_h)),
+\end{align}
+
+** 
+
+The resulting augmented joint probability distribution takes the form,
+\begin{equation}
+\begin{split}
+	p(\mathbf{Y}, \mathbf{F}, \pmb{\alpha}, \mathbf{H}, \mathbf{U} | \mathbf{X}, \mathbf{Z}) = &\ p(\pmb{\alpha}|\mathbf{h}) p(\mathbf{h} | \mathbf{u}_h, \mathbf{X}, \mathbf{Z}_h) p(\mathbf{u}_h | \mathbf{Z}_h) \\ 
+  \prod^K_{k=1} \prod^F_{j=1} p(\mathbf{y}_{:,j} | &\mathbf{f}^{(k)}_{:,j}, \pmb{\alpha}) p(\mathbf{f}^{(k)}_{:,j} | \mathbf{u}_{:,j}^{(k)}, \mathbf{X})  p(\mathbf{u}_{:,j}^{(k)} | \mathbf{Z}^{(k)}) 
+\end{split}
+\end{equation}
+
+** 
+
+The variational posteriors of our dynamics $\mathbf{F}$ and separation manifold $\mathbf{H}$ take the form,
+\begin{align}
+	q(\mathbf{F}^{(k)} | \mathbf{X}) &= \int q(\mathbf{U}^{(k)}) \prod^N_{n=1} p(\mathbf{f}^{(k)}_n | \mathbf{U}^{(k)}, \mathbf{x}_n) \text{d} \mathbf{U}^{(k)}, \\
+	q(\mathbf{H} | \mathbf{X}) &= \int q(\mathbf{U}_h) \prod^N_{n=1} p(\mathbf{h}_n | \mathbf{U}_h, \mathbf{x}_n) \text{d} \mathbf{U}_h.
+\end{align}
+
+** 
+
+Our variational posterior takes the factorized form,
+\begin{equation}
+	q(\mathbf{H}, \mathbf{F}, \mathbf{U}) = \prod^K_{k=1} \displaystyle\prod_{n=1}^N p(\mathbf{h}_n | \mathbf{U}_h, \mathbf{x}_n) q(\mathbf{U}_h) p(\mathbf{f}^{(k)}_n | \mathbf{U}^{(k)}, \mathbf{x}_n) q(\mathbf{U}^{(k)}).
+\end{equation}
+
+** Lower Bound
+\begin{align}
+	\mathcal{L} &= \sum_{n=1}^N \E_{q(\mathbf{h}_n)}\bigg[\text{log}\ p(\mathbf{y}_n | \mathbf{f}_n, \pmb{\alpha}_n) p(\pmb{\alpha}_n | \mathbf{h}_n)  \bigg] \\
+	&+ \sum_{n=1}^N \E_{q(\mathbf{f}_n)}\bigg[\text{log}\ p(\mathbf{y}_n | \mathbf{f}_n, \pmb{\alpha}_n) p(\pmb{\alpha}_n | \mathbf{h}_n)  \bigg] \\
+	&\ - \text{KL}(q(\mathbf{U}_h) || p(\mathbf{U}_h)) \\
+	&\ - \sum^K_{k=1} \text{KL}(q(\mathbf{U}^{(k)}) || p(\mathbf{U}^{(k)})).
+\end{align}
+
+* Results
+#+ATTR_REVEAL: :frag (roll-in) :frag_idx (1 1)
+
+#+REVEAL_HTML: <p class="fragment fade-in-then-out">Remember $$\Delta x = f(x, y)$$</p>
+# Remember 
+# $$
+# \Delta x = f(x, y)
+# $$
+#+REVEAL_HTML: <p class="fragment fade-in"><img style="background:none; border:none; box-shadow:none;" src="images/member-berries.jpg" width="500px"/></p>
 
 
+    # #+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/member-berries.jpg" width="500px"/>
 
+** $\Delta x$
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/y_dim_1.png" height="80%" width="100%"/>
+# #+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/y_dim_1.png" width="1000px"/>
+
+** $f_1$
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/f1_dim_1.png" width="1900px"/>
+
+** $f_2$
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/f2_dim_1.png" width="1900px"/>
+
+** $h$
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/h.png" width="1900px"/>
+
+** $\alpha$
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/alpha.png" width="1900px"/>
+
+* Ok Great, But Why???
+* Trajectory Optimisation
+Want to find a trajectory (curve) in $\mathbf{X} \in \R^2$ that,
+
+1. Connects two points,
+2. Minimises distance,
+3. Avoids high aleatoric uncertainty (turbulence),
+4. Avoids high epistemic uncertainty (no data),
+  
+** What?
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/dx_quiver.png" width="500px"/>
+
+** Let's Use Our Model!
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/h.png" height="80%" width="100%"/>
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/f1_dim_1.png" height="80%" width="100%"/>
+# #+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/y_dim_1.png" width="1000px"/>
+
+* Geodesics
+
+*Geodesic*: Given two points $\mathbf{x}_1, \mathbf{x}_2 \in
+\mathcal{M}$, a Geodesic is a length minimising curve $\mathbf{c}_g$ connecting the points such
+that,
+\begin{align}
+  \mathbf{c}_{g}=\arg \min _{\mathbf{c}} \operatorname{Length}(\mathbf{c}), \quad \mathbf{c}(0)=\mathbf{x}_{1}, \mathbf{c}(1)=\mathbf{x}_{2}.
+\end{align}
+
+** How do we Calculate Lengths on Manifolds??
+
+** Riemannian Metric
+
+A Riemannian metric $\mathbf{G}$ on a
+manifold $\mathcal{M}$ is a symmetric and positive definite matrix which defines
+a smoothly varying inner product,
+\begin{align}
+  \langle \mathbf{a}, \mathbf{b} \rangle_x = \mathbf{a}^T \mathbf{G}(x) \mathbf{b}
+\end{align}
+in the tangent space $T_x\mathcal{M}$, for each point $x \in \mathcal{M}$ and
+$\mathbf{a}, \mathbf{b} \in T_x\mathcal{M}$. The matrix $\mathbf{G}$ is called
+the metric tensor.
+
+** Let's Imagine a Random Manifold
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/original_gp_mean.png" height="80%" width="100%"/>
+** Let's Visualise Quiver of G(x)
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/gradient_mean_quiver_just_mean.png" height="80%" width="100%"/>
+** Let's Visualise Contour of Each Dimension G(x)
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/gradient_mean.png" height="80%" width="100%"/>
+
+** Lengths on Manifolds
+
+On a Riemannian manidold $\mathcal{M}$, the length of a curce $\mathbf{c} : [0, 1]
+\rightarrow \mathcal{M}$ is given by the norm of the tangent vector (velocity)
+along the curve,
+\begin{align}\label{eq:length}
+  \text { Length }(\mathbf{c}) &=\int_{0}^{1}\left\|\mathbf{c}^{\prime}(\lambda)\right\|_{\mathbf{G}(\mathbf{c}(\lambda))} \mathrm{d} \lambda \\
+  &=\int_{0}^{1} \sqrt{\mathbf{c}^{\prime}(\lambda)^{T} \mathbf{G}(\mathbf{c}(\lambda)) \mathbf{c}^{\prime}(\lambda)} \mathrm{d} \lambda
+\end{align}
+where $\mathbf{c}'$ denotes the derivative of $\mathbf{c}$ and $\mathbf{G}(\mathbf{c}(\lambda))$ is the metric tensor at $\mathbf{c}(\lambda)$.
+
+** 
+It follows that Geodesics satisfy the following second order ODE,
+\begin{align*}  
+\mathbf{c}^{\prime \prime}(\lambda)&=\mathbf{f}\left(\lambda, \mathbf{c}, \mathbf{c}^{\prime}\right)
+  \\
+  &=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{c}(\lambda))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{c}(\lambda))]}{\partial \mathbf{c}(\lambda)}\right]^{T}\left(\mathbf{c}^{\prime}(\lambda) \otimes \mathbf{c}^{\prime}(\lambda)\right)
+\end{align*}
+
+** 
+Which can be expressed as a system of 1st order equations.
+
+Let $\mathbf{g}(\lambda) = \mathbf{c}'(\lambda)$
+and solve for $\mathbf{c}$ and $\mathbf{c}'$,
+\begin{align}
+  \label{eq:1ode}
+  \left[\begin{array}{l}
+          {\mathbf{c}^{\prime}(\lambda)} \\
+          {\mathbf{g}^{\prime}(\lambda)}
+        \end{array}\right]=\left[\begin{array}{c}
+                                   {\mathbf{g}(\lambda)} \\
+                                   {\mathbf{f}(\lambda, \mathbf{c}, \mathbf{g})}
+                                 \end{array}\right]
+\end{align}
+
+* Probabilistic Geodesics
+
+Let's introduce the following Reimannian metric,
+\begin{align}
+  \langle \mathbf{a}, \mathbf{b} \rangle_x = \mathbf{a}^T \mathbf{J}^T \mathbf{J} \mathbf{b} =
+  \mathbf{a}^T \mathbf{G}(x) \mathbf{b}
+\end{align}
+where $\mathbf{J}$ denotes the Jacobian of h,
+\begin{align}
+  [\mathbf{J}]_{j}=\frac{\partial h}{\partial l_{j}} = \bigg[ \frac{\partial h}{\partial x}, \frac{\partial h}{\partial y} \bigg].
+\end{align}
+
+** Quick Maths
+- The differential operator is linear so the derivative of a GP is again a GP,
+- So the Jacobian and the output are jointly Gaussian,
+
+\begin{align}
+\left[\begin{array}{c}
+        {\mathbf{Y}} \\
+        {\frac{\partial \mathbf{y}_{*}}{\partial \mathbf{x}}}
+      \end{array}\right] \sim \mathcal{N}\left(\mathbf{0},\left[\begin{array}{cc}
+                                                                  {\mathbf{K}_{\mathbf{x}, \mathbf{x}}} & {\partial \mathbf{K}_{\mathbf{x}, *}} \\
+                                                                  {\partial \mathbf{K}_{\mathbf{x}, *}^{\top}} & {\partial^{2} \mathbf{K}_{*, *}}
+                                                                \end{array}\right]\right).
+\end{align}
+
+** 
+This means that we can easily obtain the conditional distribution $p(\mathbf{J} | \mathbf{X}, \mathbf{Y}, \mathbf{x}_*)$,
+\begin{align}
+  p(\mathbf{J} | \mathbf{Y}, \mathbf{X}, \mathbf{x}_*) &= \prod^p_{j=1} (\pmb{\mu}_{J(j,:)}, \mathbf{\Sigma}_J), \\
+  \pmb{\mu}_{J(j,:)} &= \partial\mathbf{K}^T_{x,*} \mathbf{K}^{-1}_{x,x} \mathbf{Y}_{:,j},  \\
+  \mathbf{\Sigma}_J &= \partial^2\mathbf{K}_{*,*} - \partial\mathbf{K}_{x,*}^T \mathbf{K}^{-1}_{x,x} \partial \mathbf{K}_{x,*}.
+\end{align}
+
+** 
+Suppose we draw $n$ samples from this $D-$ dimensional normal distribution to get
+a matrix $\mathbf{J}_* \in \R^{D \times n}$.
+This induces a non-central Wishart distribution over the metric tensor $\mathbf{G}$,
+\begin{align}
+  \mathbf{G}=\mathcal{W}_{q}\left(p, \boldsymbol{\Sigma}_{J}, \mathbb{E}\left[\mathbf{J}^{\top}\right] \mathbb{E}[\mathbf{J}]\right),
+\end{align}
+as the Wishart distribution is the probability dist of the $D \times D$ random matrix
+$\mathbf{G}_* = \mathbf{J}_* \mathbf{J}_*^T$, known as the scatter matrix.
+
+** 
+The expected metric tensor is then given by,
+\begin{align}
+  \E[\mathbf{J}^T \mathbf{J}] = \E[\mathbf{J}^T] \E[\mathbf{J}] + p \mathbf{\Sigma}_J.
+\end{align}
+The expected metric tensor includes a covariance term $p \mathbf{\Sigma}_J$ which implies that the
+metric is larger when the uncertainty in the mapping is higher. This is exactly
+what we wanted from our metric tensor!
+
+* Pretty Plots
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/gradient_mean_quiver.png" height="80%" width="100%"/>
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/gradient_mean.png" height="80%" width="100%"/>
+
+** 
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/gradient_variance_quiver.png" height="80%" width="100%"/>
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/gradient_variance.png" height="80%" width="100%"/>
+** 
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/trace(G(x)).png" height="80%" width="100%"/>
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/G(x).png" height="80%" width="100%"/>
+
+* Results
+
+#+REVEAL_HTML: <img style="background:none; border:none; box-shadow:none;" src="images/optimised-geodesic.png" width="100%"/>
+* Thanks for Listening!

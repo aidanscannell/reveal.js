@@ -1,0 +1,13 @@
+/* @import "../../css/theme/black.css" */
+
+.reveal section img {
+    background:none;
+    border:none;
+    box-shadow:none;
+}
+
+.img {
+    background:none;
+    border:none;
+    box-shadow:none;
+}
